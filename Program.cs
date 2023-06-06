@@ -1,3 +1,4 @@
+using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.EntityFrameworkCore;
 using System;
 using TaskPlannerApi.Models;
@@ -16,25 +17,16 @@ namespace TaskPlannerApi
 
             // DbContext configuration
             builder.Services.AddDbContext<TaskContext>(options => options.UseSqlServer(connection));
-            var MyAllowedOrigins = "_myAllowedOrigins";
-
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy(name: MyAllowedOrigins, policy =>
-                {
-                    policy.WithOrigins("https://localhost:3000")
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
-                });
-            });
-
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();                        
-
+            builder.Services.AddSwaggerGen();
+            builder.Services.AddCors();
 
             var app = builder.Build();
 
-            app.UseAuthorization();
+            app.UseCors(options =>
+            {
+                options.WithOrigins("http://localhost:3000");
+            });
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -46,8 +38,6 @@ namespace TaskPlannerApi
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseHttpsRedirection();
-
-            app.UseCors(MyAllowedOrigins);
             app.Run();
         }
     }
