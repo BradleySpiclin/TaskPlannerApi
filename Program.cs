@@ -21,25 +21,11 @@ namespace TaskPlannerApi
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-
-
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy(name: "MyPolicy",
-                    policy =>
-                    {
-                        policy.WithOrigins("https://localhost:3000")
-                            .WithMethods("PUT", "DELETE", "GET", "POST");
-                    });
-            });
-
             var app = builder.Build();
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseRouting();
-
-            app.UseCors();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -47,7 +33,18 @@ namespace TaskPlannerApi
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
             app.UseAuthorization();
+
+            // Disable CORS
+            app.Use((context, next) =>
+            {
+                context.Response.Headers.Remove("Access-Control-Allow-Origin");
+                context.Response.Headers.Remove("Access-Control-Allow-Headers");
+                context.Response.Headers.Remove("Access-Control-Allow-Methods");
+                return next();
+            });
+
             app.Run();
         }
     }
