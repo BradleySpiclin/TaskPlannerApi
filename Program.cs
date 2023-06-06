@@ -16,20 +16,25 @@ namespace TaskPlannerApi
 
             // DbContext configuration
             builder.Services.AddDbContext<TaskContext>(options => options.UseSqlServer(connection));
+            var MyAllowedOrigins = "_myAllowedOrigins";
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(name: MyAllowedOrigins, policy =>
+                {
+                    policy.WithOrigins("https://localhost:3000")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+                });
+            });
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();                        
-            builder.Services.AddCors();
+
 
             var app = builder.Build();
 
             app.UseRouting();
-
-            app.UseCors(builder =>
-            {
-                builder.AllowAnyOrigin() // Allow any origin
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
-            });
 
             app.UseAuthorization();
 
@@ -43,6 +48,8 @@ namespace TaskPlannerApi
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseHttpsRedirection();
+
+            app.UseCors(MyAllowedOrigins);
             app.Run();
         }
     }
