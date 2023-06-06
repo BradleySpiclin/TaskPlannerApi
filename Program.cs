@@ -2,6 +2,7 @@ using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.EntityFrameworkCore;
 using System;
 using TaskPlannerApi.Models;
+using Microsoft.AspNetCore.Builder;
 
 namespace TaskPlannerApi
 {
@@ -19,14 +20,26 @@ namespace TaskPlannerApi
             builder.Services.AddDbContext<TaskContext>(options => options.UseSqlServer(connection));
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            builder.Services.AddCors();
+
+
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(name: "MyPolicy",
+                    policy =>
+                    {
+                        policy.WithOrigins("https://localhost:3000")
+                            .WithMethods("PUT", "DELETE", "GET", "POST");
+                    });
+            });
 
             var app = builder.Build();
 
-            app.UseCors(options =>
-            {
-                options.WithOrigins("http://localhost:3000");
-            });
+            app.UseHttpsRedirection();
+            app.UseStaticFiles();
+            app.UseRouting();
+
+            app.UseCors();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -34,10 +47,7 @@ namespace TaskPlannerApi
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
-            app.UseDefaultFiles();
-            app.UseStaticFiles();
-            app.UseHttpsRedirection();
+            app.UseAuthorization();
             app.Run();
         }
     }
