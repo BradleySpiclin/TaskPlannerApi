@@ -34,8 +34,6 @@ namespace TaskPlannerApi
 
             var app = builder.Build();
 
-            app.UseRouting();
-
             app.UseAuthorization();
 
             // Configure the HTTP request pipeline.
