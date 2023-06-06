@@ -22,14 +22,21 @@ namespace TaskPlannerApi
             {
                 options.AddDefaultPolicy(builder =>
                 {
-                    builder.AllowAnyOrigin()
-                           .AllowAnyMethod()
-                           .AllowAnyHeader();
+                    builder.WithOrigins("http://localhost:3000")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
                 });
             });
 
             var app = builder.Build();
             app.UseCors();
+
+            app.UseRouting();
+
+            // Other middleware
+
+            app.UseAuthorization();
+
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -44,7 +51,6 @@ namespace TaskPlannerApi
 
             app.UseHttpsRedirection();
 
-            app.UseAuthorization();
 
 
             app.MapControllers();
