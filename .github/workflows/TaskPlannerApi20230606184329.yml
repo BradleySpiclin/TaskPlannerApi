@@ -1,10 +1,10 @@
-name: Build and deploy .NET Core application to Web App TaskPlannerApi
+name: Build and deploy .NET Core application to Web App TaskPlannerApi20230606184329
 on:
   push:
     branches:
     - master
 env:
-  AZURE_WEBAPP_NAME: TaskPlannerApi
+  AZURE_WEBAPP_NAME: TaskPlannerApi20230606184329
   AZURE_WEBAPP_PACKAGE_PATH: .\publish
   CONFIGURATION: Release
   DOTNET_CORE_VERSION: 7.0.x
@@ -44,5 +44,5 @@ jobs:
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        publish-profile: ${{ secrets.TaskPlannerApi_7B89 }}
+        publish-profile: ${{ secrets.TaskPlannerApi20230606184329_DCA1 }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
