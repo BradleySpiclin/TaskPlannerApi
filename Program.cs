@@ -25,14 +25,8 @@ namespace TaskPlannerApi
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-            app.UseRouting();
 
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+            app.UseRouting();
 
             app.UseAuthorization();
 
@@ -44,6 +38,8 @@ namespace TaskPlannerApi
                 context.Response.Headers.Remove("Access-Control-Allow-Methods");
                 return next();
             });
+
+            app.MapControllers();
 
             app.Run();
         }
