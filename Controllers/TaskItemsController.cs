@@ -72,7 +72,7 @@ namespace TaskPlannerApi.Controllers
                 }
             }
 
-            return Ok(taskItem); // Return the updated task item
+            return NoContent();
         }
 
         // POST: api/TaskItems
