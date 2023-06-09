@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using TaskPlannerApi.Models;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.OpenApi.Models;
 
 namespace TaskPlannerApi
 {
@@ -19,13 +20,19 @@ namespace TaskPlannerApi
             // DbContext configuration
             builder.Services.AddDbContext<TaskContext>(options => options.UseSqlServer(connection));
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+
+            // Configure Swagger
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Your API", Version = "v1" });
+            });
 
             var app = builder.Build();
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
+    
             app.UseRouting();
 
             app.UseAuthorization();
@@ -39,8 +46,14 @@ namespace TaskPlannerApi
                 return next();
             });
 
-            app.MapControllers();
+            // Enable Swagger UI
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Your API V1");
+            });
 
+            app.MapControllers();
             app.Run();
         }
     }
