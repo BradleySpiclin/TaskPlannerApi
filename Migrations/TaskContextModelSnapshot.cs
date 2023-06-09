@@ -34,9 +34,6 @@ namespace TaskPlannerApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("CompletedDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("datetime2");
 

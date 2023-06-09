@@ -122,7 +122,6 @@ namespace TaskPlannerApi.Controllers
             Name = taskItem.Name,
             Comments = taskItem.Comments,
             DueDate = taskItem.DueDate,
-            CompletedDate = taskItem.CompletedDate,
             IsComplete = taskItem.IsComplete
         };
     }

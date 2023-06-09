@@ -12,8 +12,8 @@ using TaskPlannerApi.Models;
 namespace TaskPlannerApi.Migrations
 {
     [DbContext(typeof(TaskContext))]
-    [Migration("20230606055657_initial")]
-    partial class initial
+    [Migration("20230609062607_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -36,9 +36,6 @@ namespace TaskPlannerApi.Migrations
                     b.Property<string>("Comments")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("CompletedDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("datetime2");

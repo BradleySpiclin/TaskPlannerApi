@@ -16,7 +16,6 @@ namespace TaskPlannerApi.Models
         public string Comments { get; set; }
         public DateTime DueDate { get; set; }
         public bool IsComplete { get; set; }
-        public DateTime? CompletedDate { get; set; }
         public string? Secret { get; set; }
     }
 }
