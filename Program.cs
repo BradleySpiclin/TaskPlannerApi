@@ -21,8 +21,6 @@ namespace TaskPlannerApi
             builder.Services.AddDbContext<TaskContext>(options => options.UseSqlServer(connection));
             builder.Services.AddEndpointsApiExplorer();
 
-
-
             // Configure Swagger
             builder.Services.AddSwaggerGen(c =>
             {
