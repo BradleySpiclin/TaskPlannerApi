@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using TaskPlannerApi.Dtos;
+using TaskPlannerApi.Extensions;
 using TaskPlannerApi.Models;
+using TaskPlannerApi.Repositories;
 
 namespace TaskPlannerApi.Controllers
 {
@@ -8,121 +10,123 @@ namespace TaskPlannerApi.Controllers
     [ApiController]
     public class TaskItemsController : ControllerBase
     {
-        private readonly TaskContext _context;
+        private readonly TaskItemRepository _taskItemRepository;
 
-        public TaskItemsController(TaskContext context)
+        public TaskItemsController(TaskItemRepository taskItemRepository)
         {
-            _context = context;
+            _taskItemRepository = taskItemRepository;
         }
 
-        // GET: api/TaskItems
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TaskItemDTO>>> GetTaskItems()
+        public async Task<ActionResult<IEnumerable<TaskItemDTO>>> GetAllTasks()
         {
-            if (_context.TaskItems == null)
+            var taskItems = await _taskItemRepository.GetAll();
+
+            if (taskItems == null || !taskItems.Any())
             {
                 return NotFound();
             }
-            return await _context.TaskItems.ToListAsync();
+
+            var taskItemDtos = taskItems.ConvertToDTO();
+
+            return Ok(taskItemDtos);
         }
 
-        // GET: api/TaskItems/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<TaskItemDTO>> GetTaskItem(long id)
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<IEnumerable<TaskItemDTO>>> GetTaskById(int id)
         {
-            if (_context.TaskItems == null)
-            {
-                return NotFound();
-            }
-            var taskItem = await _context.TaskItems.FindAsync(id);
+            var taskItem = await this._taskItemRepository.Get(id);
 
             if (taskItem == null)
             {
                 return NotFound();
             }
+            var taskItemDTO = taskItem.ConvertToDTO();
 
-            return taskItem;
+            return Ok(taskItemDTO);
         }
-
-        // PUT: api/TaskItems/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutTaskItem(long id, TaskItemDTO taskItem)
+        
+        [HttpGet("GetTasksByCategoryId")]
+        public async Task<ActionResult<IEnumerable<TaskItemDTO>>> GetTasksByCategoryId(int id)
         {
-            if (id != taskItem.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(taskItem).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!TaskItemExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+                var taskItems = await _taskItemRepository.GetAllById(id);
 
-            return NoContent();
+                if (taskItems == null || !taskItems.Any())
+                {
+                    return NoContent();
+                }
+
+                var taskItemDTOs = taskItems.ConvertToDTO();
+
+                return Ok(taskItemDTOs);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred");
+            }
         }
 
-        // POST: api/TaskItems
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<TaskItemDTO>> PostTaskItem(TaskItemDTO taskItem)
+        public async Task<ActionResult<TaskItemDTO>> CreateTask(int categoryID, TaskItemDTO taskItemDto)
         {
-            if (_context.TaskItems == null)
+            if (!ModelState.IsValid)
             {
-                return Problem("Entity set 'TaskContext.TaskItems'  is null.");
+                return BadRequest("Invalid task item data");
             }
-            _context.TaskItems.Add(taskItem);
-            await _context.SaveChangesAsync();
 
-            //return CreatedAtAction("GetTaskItem", new { id = taskItem.Id }, taskItem);
-            return CreatedAtAction(nameof(GetTaskItem), new { id = taskItem.Id }, taskItem);
+            var taskItem = new TaskItem
+            {
+                Id = taskItemDto.Id,
+                Name = taskItemDto.Name,
+                Comments = taskItemDto.Comments,
+                DueDate = taskItemDto.DueDate,
+                IsComplete = taskItemDto.IsComplete,
+                CategoryId = categoryID
+            };
+
+            var createdTaskItem = await _taskItemRepository.Create(taskItem);
+            var createdTaskItemDto = createdTaskItem.ConvertToDTO();
+            return CreatedAtAction(nameof(GetTaskById), new { categoryId = taskItemDto.CategoryId, id = createdTaskItemDto.Id }, createdTaskItemDto);
         }
 
-        // DELETE: api/TaskItems/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTaskItem(long id)
+        [HttpDelete("{id:int}")]
+        public async Task<ActionResult> DeleteTaskItem(int id)
         {
-            if (_context.TaskItems == null)
+            var deleted = await _taskItemRepository.Delete(id);
+
+            if (deleted)
+            {
+                return NoContent();
+            }
+
+            return NotFound();
+        }
+
+        [HttpPut]
+        public async Task<ActionResult<TaskItemDTO>> UpdateTaskItem(TaskItemDTO taskItemDto)
+        {
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid task item data");
+            }
+
+            var existingTaskItem = await _taskItemRepository.Get(taskItemDto.Id);
+
+            if (existingTaskItem == null)
             {
                 return NotFound();
             }
-            var taskItem = await _context.TaskItems.FindAsync(id);
-            if (taskItem == null)
-            {
-                return NotFound();
-            }
 
-            _context.TaskItems.Remove(taskItem);
-            await _context.SaveChangesAsync();
+            existingTaskItem.Name = taskItemDto.Name;
+            existingTaskItem.Comments = taskItemDto.Comments;
+            existingTaskItem.DueDate = taskItemDto.DueDate;
+            existingTaskItem.IsComplete = taskItemDto.IsComplete;
 
-            return NoContent();
-        }
-
-        private bool TaskItemExists(long id)
-        {
-            return (_context.TaskItems?.Any(e => e.Id == id)).GetValueOrDefault();
-        }
-
-        private static TaskItemDTO ItemToDTO(TaskItem taskItem) => new TaskItemDTO
-        {
-            Id = taskItem.Id,
-            Name = taskItem.Name,
-            Comments = taskItem.Comments,
-            DueDate = taskItem.DueDate,
-            IsComplete = taskItem.IsComplete
-        };
+            var updatedTaskItem = await _taskItemRepository.Update(existingTaskItem);
+            return Ok(updatedTaskItem.ConvertToDTO());
+        }     
     }
 }
