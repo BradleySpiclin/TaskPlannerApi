@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using System;
-using TaskPlannerApi.Models;
+using TaskPlannerApi.Data;
+using TaskPlannerApi.Repositories.Contracts;
+using TaskPlannerApi.Repositories;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.OpenApi.Models;
+using TaskPlannerApi.Models;
 
 namespace TaskPlannerApi
 {
@@ -11,49 +13,45 @@ namespace TaskPlannerApi
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
-            // Add services to the container.
-            builder.Services.AddControllers();
-            var connection = builder.Configuration.GetConnectionString("AZURE_SQL_CONNECTIONSTRING");
-
-            // DbContext configuration
-            builder.Services.AddDbContext<TaskContext>(options => options.UseSqlServer(connection));
-            builder.Services.AddEndpointsApiExplorer();
-
-            // Configure Swagger
-            builder.Services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Your API", Version = "v1" });
-            });
+                builder.Services.AddControllers();
+                builder.Services.AddEndpointsApiExplorer();
+                builder.Configuration.AddUserSecrets<StartupBase>();
+                var connectionString = builder.Configuration["ConnectionStrings:AZURE_SQL_CONNECTIONSTRING"];
+                builder.Services.AddDbContext<AppDbContext>(options =>
+                {
+                    options.UseSqlServer(connectionString);
 
+                });
+                builder.Services.AddEndpointsApiExplorer();
+                builder.Services.AddSwaggerGen();
+                builder.Services.AddScoped<TaskItemRepository>();
+                builder.Services.AddScoped<CategoryRepository>();
+
+                builder.Services.AddCors(options =>
+                {
+                    options.AddDefaultPolicy(builder =>
+                    {
+                        builder.AllowAnyOrigin()
+                               .AllowAnyMethod()
+                               .AllowAnyHeader();
+                    });
+                });
+            }
             var app = builder.Build();
-
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
-
-    
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            // Disable CORS
-            app.Use((context, next) =>
             {
-                context.Response.Headers.Remove("Access-Control-Allow-Origin");
-                context.Response.Headers.Remove("Access-Control-Allow-Headers");
-                context.Response.Headers.Remove("Access-Control-Allow-Methods");
-                return next();
-            });
+                AppDbInitializer.SeedDatabase(app);
+                app.UseHttpsRedirection();
+                app.MapControllers();
+                app.UseCors();
 
-            // Enable Swagger UI
-            app.UseSwagger();
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Your API V1");
-            });
-
-            app.MapControllers();
-            app.Run();
+                if (app.Environment.IsDevelopment()) 
+                {
+                    app.UseSwagger();
+                    app.UseSwaggerUI();
+                }
+                app.Run();
+            }
         }
     }
 }
