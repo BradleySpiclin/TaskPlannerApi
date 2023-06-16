@@ -31,14 +31,14 @@ namespace TaskPlannerApi.Controllers
         }
 
         [HttpPut("{id:int}")]
-        public async Task<ActionResult<CategoryDTO>> UpdateCategory(int id, CategoryDTO categoryDto)
+        public async Task<ActionResult<CategoryDTO>> UpdateCategory(CategoryDTO categoryDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest("Invalid category item data");
             }
 
-            var existingCategory = await _categoryRepository.Get(id);
+            var existingCategory = await _categoryRepository.Get(categoryDto.Id);
 
             if (existingCategory == null)
             {
